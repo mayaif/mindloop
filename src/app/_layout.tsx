@@ -1,18 +1,36 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { Slot } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
+import { AppSyncProvider, useAppSyncContext } from '@/lib/AppSyncContext';
+import { Onboarding } from '@/components/Onboarding';
+import { AppChrome } from '@/components/AppChrome';
+import '../global.css';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+function Gate() {
+  const { needsAuth, ready, onSignedIn } = useAppSyncContext();
 
-SplashScreen.preventAutoHideAsync();
+  if (needsAuth) {
+    return <Onboarding onSignedIn={onSignedIn} />;
+  }
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  if (!ready) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <AppChrome>
+      <Slot />
+    </AppChrome>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AppSyncProvider>
+      <Gate />
+    </AppSyncProvider>
   );
 }

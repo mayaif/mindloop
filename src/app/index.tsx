@@ -1,98 +1,112 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppSyncContext } from '@/lib/AppSyncContext';
+import { getHabitsLocal, getLogsForDateLocal } from '@/lib/localDb';
+import { adjustTodayProgress, setTodayMood, todayIsoDate } from '@/lib/habits';
+import { StatTile } from '@/components/StatTile';
+import { HabitRow } from '@/components/HabitRow';
+import type { Habit, HabitLog } from '@/types/habit';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+function greeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
+export default function TodayScreen() {
+  const { userId, refreshToken, ready } = useAppSyncContext();
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [logs, setLogs] = useState<HabitLog[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    const [h, l] = await Promise.all([getHabitsLocal(), getLogsForDateLocal(todayIsoDate())]);
+    setHabits(h);
+    setLogs(l);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (ready) void load();
+  }, [ready, refreshToken, load]);
+
+  async function handleAdjust(habit: Habit, delta: number) {
+    if (!userId) return;
+    await adjustTodayProgress(userId, habit, delta);
+    await load();
   }
-  if (Device.isDevice) {
+
+  async function handleMood(habit: Habit, score: number) {
+    if (!userId) return;
+    await setTodayMood(userId, habit, score);
+    await load();
+  }
+
+  function logFor(habitId: string) {
+    return logs.find((l) => l.habitId === habitId);
+  }
+
+  const primaryHabits = habits.filter((h) => ['water', 'sleep', 'exercise', 'mood'].includes(h.key));
+
+  if (loading) {
     return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
+      <SafeAreaView className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator />
+      </SafeAreaView>
     );
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <SafeAreaView edges={['top']} className="flex-1 bg-background">
+      <ScrollView contentContainerClassName="gap-6 p-6" accessibilityLabel="Today">
+        <View className="gap-1">
+          <Text className="text-3xl font-semibold text-foreground">{greeting()}</Text>
+          <Text className="text-base text-muted-foreground">Ready to center yourself today?</Text>
+        </View>
+
+        <View>
+          <Text className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Daily overview
+          </Text>
+          <View className="flex-row flex-wrap gap-3">
+            {primaryHabits.map((habit) => {
+              const log = logFor(habit.id);
+              const valueLabel =
+                habit.key === 'mood'
+                  ? log?.moodScore
+                    ? `${log.moodScore}/5`
+                    : 'Not logged'
+                  : `${log?.value ?? 0}${habit.unit ? ` ${habit.unit}` : ''}`;
+              return (
+                <View key={habit.id} className="min-w-[45%] flex-1">
+                  <StatTile icon={habit.icon} label={habit.label} valueLabel={valueLabel} />
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        <View className="gap-3">
+          <Text className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Today&apos;s habits
+          </Text>
+          {habits.map((habit) => {
+            const log = logFor(habit.id);
+            return (
+              <HabitRow
+                key={habit.id}
+                habit={habit}
+                value={log?.value ?? null}
+                moodScore={log?.moodScore ?? null}
+                onAdjust={(delta) => handleAdjust(habit, delta)}
+                onSetMood={(score) => handleMood(habit, score)}
+              />
+            );
+          })}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
-
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
-});

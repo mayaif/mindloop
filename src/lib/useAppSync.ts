@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
-import { getCurrentUser } from './supabase';
+import { getCurrentUser, supabase } from './supabase';
 import { ensureDefaultHabits } from './habits';
 import { runSync } from './sync';
 import { subscribeToRealtimeSync, type RealtimeSyncHandle } from './realtime';
@@ -90,6 +90,25 @@ export function useAppSync(): AppSyncState {
       }
     });
     return unsubscribe;
+  }, []);
+
+  // Reacts to sign-out from anywhere in the app (Settings) by resetting back
+  // to the Onboarding gate — without this, needsAuth only ever gets set once
+  // at initial mount and a signed-out user would be stuck looking at a
+  // "ready" app with no session.
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        realtimeRef.current?.unsubscribe();
+        realtimeRef.current = null;
+        userIdRef.current = null;
+        setUserId(null);
+        setReady(false);
+        setRealtimeConnected(false);
+        setNeedsAuth(true);
+      }
+    });
+    return () => data.subscription.unsubscribe();
   }, []);
 
   async function trySync(id: string) {
