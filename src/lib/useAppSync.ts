@@ -3,6 +3,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { getCurrentUser } from './supabase';
 import { ensureDefaultHabits } from './habits';
 import { runSync } from './sync';
+import { subscribeToRealtimeSync, type RealtimeSyncHandle } from './realtime';
 
 export type AppSyncState = {
   userId: string | null;
@@ -11,33 +12,53 @@ export type AppSyncState = {
   needsAuth: boolean;
   ready: boolean;
   syncing: boolean;
+  /** True once the Realtime channel is subscribed — a live cross-device
+   * connection is active, not just periodic reconnect-triggered syncs. */
+  realtimeConnected: boolean;
+  lastSyncedAt: Date | null;
   lastError: string | null;
   /** Call after a successful sign-in/sign-up/guest-start so the app picks up
    * the new session, seeds default habits if needed, and syncs. */
   onSignedIn: () => Promise<void>;
+  /** Bump this after a local write so screens can force an immediate re-read
+   * of local data without waiting on the sync/realtime cadence. */
+  refreshToken: number;
 };
 
 /** Checks for an existing session on launch (never signs anyone in
  * implicitly — that's now a deliberate choice made on the Onboarding/auth
- * screen), then seeds default habits and re-syncs whenever connectivity
- * comes back — the offline -> online transition a habit tracker needs to
- * handle constantly, not just once at startup. */
+ * screen), seeds default habits, re-syncs whenever connectivity comes back,
+ * and holds open a Realtime subscription so changes from another device
+ * apply to local SQLite within a second or two while both are online. */
 export function useAppSync(): AppSyncState {
   const [userId, setUserId] = useState<string | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
   const [ready, setReady] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState(0);
   const userIdRef = useRef<string | null>(null);
+  const realtimeRef = useRef<RealtimeSyncHandle | null>(null);
 
-  const proceedWithUser = useCallback(async (id: string) => {
-    userIdRef.current = id;
-    setUserId(id);
-    setNeedsAuth(false);
-    await ensureDefaultHabits(id);
-    setReady(true);
-    void trySync(id);
-  }, []);
+  const bumpRefresh = useCallback(() => setRefreshToken((t) => t + 1), []);
+
+  const proceedWithUser = useCallback(
+    async (id: string) => {
+      userIdRef.current = id;
+      setUserId(id);
+      setNeedsAuth(false);
+      await ensureDefaultHabits(id);
+      setReady(true);
+      void trySync(id);
+
+      realtimeRef.current?.unsubscribe();
+      realtimeRef.current = subscribeToRealtimeSync(id, bumpRefresh);
+      setRealtimeConnected(true);
+    },
+    [bumpRefresh]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -58,6 +79,7 @@ export function useAppSync(): AppSyncState {
 
     return () => {
       cancelled = true;
+      realtimeRef.current?.unsubscribe();
     };
   }, [proceedWithUser]);
 
@@ -75,6 +97,8 @@ export function useAppSync(): AppSyncState {
     try {
       await runSync(id);
       setLastError(null);
+      setLastSyncedAt(new Date());
+      bumpRefresh();
     } catch (err) {
       setLastError(err instanceof Error ? err.message : 'Sync failed');
     } finally {
@@ -87,5 +111,15 @@ export function useAppSync(): AppSyncState {
     if (user) await proceedWithUser(user.id);
   }, [proceedWithUser]);
 
-  return { userId, needsAuth, ready, syncing, lastError, onSignedIn };
+  return {
+    userId,
+    needsAuth,
+    ready,
+    syncing,
+    realtimeConnected,
+    lastSyncedAt,
+    lastError,
+    onSignedIn,
+    refreshToken,
+  };
 }
