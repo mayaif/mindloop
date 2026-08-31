@@ -1,23 +1,47 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { getWeeklyCoaching, type MicroGoal } from '@/lib/coach';
+import { getWeeklyCoaching, getSavedInsight, setCommittedGoals, type MicroGoal } from '@/lib/coach';
 import { Card } from '@/components/Card';
 import { habitIconName } from '@/components/habitIcon';
+import { useAppSyncContext } from '@/lib/AppSyncContext';
 
 export default function CoachScreen() {
+  const { userId } = useAppSyncContext();
+  const [checkingSaved, setCheckingSaved] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [review, setReview] = useState<string | null>(null);
   const [goals, setGoals] = useState<MicroGoal[]>([]);
   const [committed, setCommitted] = useState<Set<string>>(new Set());
 
+  // On opening Coach, check for an insight already saved for the current
+  // week before showing the "Get this week's insight" prompt — a real Groq
+  // call only happens when the user explicitly asks for one, not on every
+  // visit to this tab.
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    void getSavedInsight(userId).then((saved) => {
+      if (cancelled || !saved) return;
+      setReview(saved.review);
+      setGoals(saved.goals);
+      setCommitted(new Set(saved.committedGoalTitles));
+    }).finally(() => {
+      if (!cancelled) setCheckingSaved(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
   async function fetchInsight() {
+    if (!userId) return;
     setLoading(true);
     setError(null);
     try {
-      const result = await getWeeklyCoaching();
+      const result = await getWeeklyCoaching(userId);
       setReview(result.review);
       setGoals(result.goals);
       setCommitted(new Set());
@@ -26,6 +50,13 @@ export default function CoachScreen() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function commitGoal(title: string) {
+    if (!userId) return;
+    const next = new Set(committed).add(title);
+    setCommitted(next);
+    void setCommittedGoals(userId, Array.from(next));
   }
 
   return (
@@ -38,7 +69,13 @@ export default function CoachScreen() {
           </Text>
         </View>
 
-        {!review && !loading && (
+        {checkingSaved && (
+          <View className="items-center py-8">
+            <ActivityIndicator />
+          </View>
+        )}
+
+        {!checkingSaved && !review && !loading && (
           <Pressable
             onPress={fetchInsight}
             accessibilityRole="button"
@@ -87,7 +124,7 @@ export default function CoachScreen() {
                   <Text className="mb-1 text-lg font-semibold text-foreground">{goal.title}</Text>
                   <Text className="mb-3 text-sm text-muted-foreground">{goal.description}</Text>
                   <Pressable
-                    onPress={() => setCommitted((prev) => new Set(prev).add(goal.title))}
+                    onPress={() => commitGoal(goal.title)}
                     disabled={isCommitted}
                     accessibilityRole="button"
                     className={`items-center rounded-full py-2.5 ${

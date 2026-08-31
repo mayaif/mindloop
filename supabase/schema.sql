@@ -42,8 +42,26 @@ alter table habit_logs add column if not exists source text not null default 'ma
 
 create index if not exists habit_logs_user_date_idx on habit_logs (user_id, log_date);
 
+-- One row per user holding their most recent AI coach insight — not local
+-- SQLite-mirrored like habits/habit_logs, since generating one inherently
+-- needs a network call to the weekly-coach Edge Function anyway, so there's
+-- no offline-first case to support here. `week_start` (the Monday of the
+-- week it was generated for) is how the app decides whether a saved
+-- insight is still current or should be treated as stale and regenerated.
+create table if not exists coach_insights (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) on delete cascade unique,
+  week_start date not null,
+  review text not null,
+  goals jsonb not null,
+  committed_goal_titles jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 alter table habits enable row level security;
 alter table habit_logs enable row level security;
+alter table coach_insights enable row level security;
 
 drop policy if exists "habits_owner" on habits;
 create policy "habits_owner" on habits
@@ -51,6 +69,10 @@ create policy "habits_owner" on habits
 
 drop policy if exists "habit_logs_owner" on habit_logs;
 create policy "habit_logs_owner" on habit_logs
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "coach_insights_owner" on coach_insights;
+create policy "coach_insights_owner" on coach_insights
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- Enables Supabase Realtime broadcasts for cross-device sync (next task).
