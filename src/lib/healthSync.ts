@@ -1,11 +1,9 @@
 import { Platform } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { isHealthKitSupported, requestHealthAuthorization, readTodayHealthSnapshot } from './health';
-import { getHabitsLocal, getLogsForDateLocal, upsertHabitLogLocal, getSyncMeta, setSyncMeta } from './localDb';
+import { getHabitsLocal, getLogsForDateLocal, upsertHabitLogLocal } from './localDb';
 import { todayIsoDate } from './habits';
 import type { Habit, HabitLog, HabitKey } from '@/types/habit';
-
-const AUTHORIZATION_REQUESTED_KEY = 'healthkit_authorization_requested';
 
 /** Habits whose value is sourced from HealthKit instead of manual entry.
  * Water and Mood have no reasonable automatic proxy and stay manual. */
@@ -19,22 +17,22 @@ export async function isHealthSyncAvailable(): Promise<boolean> {
   return Platform.OS === 'ios' && (await isHealthKitSupported());
 }
 
-/** Requests HealthKit read authorization once per install (the system sheet
- * only ever appears the first time; asking again is a harmless no-op but
- * skipping it avoids the extra round trip), then pulls today's Steps and
- * Sleep data in and writes it to the local habit_logs rows those two habits
- * already use — reusing the exact same dirty-flag push-sync path a manual
- * tap would go through, so it reaches Supabase/other devices for free.
- * Cheap and safe to call on every ready/reconnect — a no-op on Android/web
- * or when HealthKit hasn't granted anything yet. */
+/** Requests HealthKit read authorization on every call rather than once —
+ * Apple's system sheet only ever appears for types the user hasn't decided
+ * on yet, so this is a cheap no-op once everything's been granted/denied,
+ * and it's what makes adding or changing a read type (like the Steps vs.
+ * Exercise Minutes swap) actually prompt existing installs instead of
+ * silently reading nothing forever because a one-time local flag says
+ * "already asked." Then pulls today's Steps and Sleep data in and writes it
+ * to the local habit_logs rows those two habits already use — reusing the
+ * exact same dirty-flag push-sync path a manual tap would go through, so it
+ * reaches Supabase/other devices for free. Cheap and safe to call on every
+ * ready/reconnect — a no-op on Android/web or when HealthKit hasn't granted
+ * anything yet. */
 export async function syncHealthDataForToday(userId: string): Promise<void> {
   if (!(await isHealthSyncAvailable())) return;
 
-  const alreadyRequested = await getSyncMeta(AUTHORIZATION_REQUESTED_KEY);
-  if (!alreadyRequested) {
-    await requestHealthAuthorization();
-    await setSyncMeta(AUTHORIZATION_REQUESTED_KEY, 'true');
-  }
+  await requestHealthAuthorization();
 
   const snapshot = await readTodayHealthSnapshot();
   const readings: Partial<Record<HabitKey, number | null>> = {
