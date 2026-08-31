@@ -80,7 +80,7 @@ export default function TodayScreen() {
                     : 'Not logged'
                   : `${log?.value ?? 0}${habit.unit ? ` ${habit.unit}` : ''}`;
               return (
-                <View key={habit.id} className="min-w-[45%] flex-1">
+                <View key={habit.id} className="w-[48%]">
                   <StatTile icon={habit.icon} label={habit.label} valueLabel={valueLabel} />
                 </View>
               );

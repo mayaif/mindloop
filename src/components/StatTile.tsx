@@ -20,7 +20,7 @@ export function StatTile({
       onPress={onPress}
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={`${label}: ${valueLabel}`}
-      className={`flex-1 items-center gap-2 rounded-2xl border border-border p-4 ${
+      className={`items-center gap-2 rounded-2xl border border-border p-4 ${
         active ? 'bg-primary/10' : 'bg-card'
       }`}
     >
