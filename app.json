@@ -45,6 +45,12 @@
           "NSHealthShareUsageDescription": "MindLoop reads your sleep and exercise data from Health so your habit tracker stays up to date automatically.",
           "NSHealthUpdateUsageDescription": "MindLoop does not write any data back to Health."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0EA672"
+        }
       ]
     ],
     "experiments": {

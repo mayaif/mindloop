@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, TextInput, Pressable, ActivityIndicator, ScrollView, Platform } from 'react-native';
+import { View, Text, TextInput, Pressable, ActivityIndicator, ScrollView, Platform, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { getCurrentUser, upgradeGuestToEmailAccount, signOut, type AuthUser } from '@/lib/supabase';
@@ -7,6 +7,13 @@ import { Card } from '@/components/Card';
 import { SyncStatus } from '@/components/AppChrome';
 import { useAppSyncContext } from '@/lib/AppSyncContext';
 import { isHealthSyncAvailable } from '@/lib/healthSync';
+import {
+  isNotificationsSupported,
+  getReminderPreference,
+  enableReminder,
+  disableReminder,
+  REMINDER_PRESETS,
+} from '@/lib/notifications';
 import { colors } from '@/theme/colors';
 
 export default function SettingsScreen() {
@@ -18,11 +25,55 @@ export default function SettingsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [upgraded, setUpgraded] = useState(false);
   const [healthAvailable, setHealthAvailable] = useState(false);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderTime, setReminderTime] = useState<{ hour: number; minute: number }>({
+    hour: REMINDER_PRESETS[2].hour,
+    minute: REMINDER_PRESETS[2].minute,
+  });
+  const [reminderError, setReminderError] = useState<string | null>(null);
+  const [reminderBusy, setReminderBusy] = useState(false);
 
   useEffect(() => {
     void getCurrentUser().then(setUser);
     void isHealthSyncAvailable().then(setHealthAvailable);
+    void getReminderPreference().then((pref) => {
+      setReminderEnabled(pref.enabled);
+      setReminderTime({ hour: pref.hour, minute: pref.minute });
+    });
   }, []);
+
+  async function handleToggleReminder(next: boolean) {
+    setReminderError(null);
+    setReminderBusy(true);
+    try {
+      if (next) {
+        const granted = await enableReminder(reminderTime.hour, reminderTime.minute);
+        if (!granted) {
+          setReminderError('Notifications permission was denied — enable it in your device Settings to get reminders.');
+          setReminderBusy(false);
+          return;
+        }
+      } else {
+        await disableReminder();
+      }
+      setReminderEnabled(next);
+    } finally {
+      setReminderBusy(false);
+    }
+  }
+
+  async function handlePickPreset(hour: number, minute: number) {
+    setReminderTime({ hour, minute });
+    if (!reminderEnabled) return; // just remembering the choice for next enable
+    setReminderBusy(true);
+    setReminderError(null);
+    try {
+      const granted = await enableReminder(hour, minute);
+      if (!granted) setReminderError('Notifications permission was denied — enable it in your device Settings to get reminders.');
+    } finally {
+      setReminderBusy(false);
+    }
+  }
 
   async function handleUpgrade() {
     setLoading(true);
@@ -133,6 +184,50 @@ export default function SettingsScreen() {
                 ? 'Health data isn’t available on this device.'
                 : 'Use the app on your iPhone to sync Sleep and Steps from Apple Health automatically.'}
             </Text>
+          )}
+        </Card>
+
+        <Card>
+          <Text className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Reminders</Text>
+          {isNotificationsSupported() ? (
+            <View className="gap-3">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-sm text-foreground">Daily check-in reminder</Text>
+                <Switch
+                  value={reminderEnabled}
+                  onValueChange={(v) => void handleToggleReminder(v)}
+                  disabled={reminderBusy}
+                  accessibilityLabel="Daily check-in reminder"
+                  trackColor={{ true: colors.primary }}
+                />
+              </View>
+              <View className="flex-row gap-2">
+                {REMINDER_PRESETS.map((preset) => {
+                  const selected = reminderTime.hour === preset.hour && reminderTime.minute === preset.minute;
+                  return (
+                    <Pressable
+                      key={preset.label}
+                      onPress={() => void handlePickPreset(preset.hour, preset.minute)}
+                      disabled={reminderBusy}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                      className={`flex-1 items-center rounded-full py-2 ${selected ? 'bg-primary' : 'border border-border'}`}
+                    >
+                      <Text className={`text-sm font-medium ${selected ? 'text-primary-foreground' : 'text-foreground'}`}>
+                        {preset.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {reminderError && (
+                <Text accessibilityRole="alert" className="text-sm text-red-600">
+                  {reminderError}
+                </Text>
+              )}
+            </View>
+          ) : (
+            <Text className="text-sm text-muted-foreground">Reminders are available in the mobile app.</Text>
           )}
         </Card>
 
