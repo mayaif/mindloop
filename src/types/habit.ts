@@ -38,7 +38,7 @@ export type HabitLog = {
 export const DEFAULT_HABITS: Omit<Habit, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'archived'>[] = [
   { key: 'water', label: 'Hydration', icon: 'droplet', unit: 'glasses', targetValue: 8 },
   { key: 'sleep', label: 'Sleep Quality', icon: 'moon', unit: 'hours', targetValue: 8 },
-  { key: 'exercise', label: 'Exercise', icon: 'activity', unit: 'minutes', targetValue: 30 },
+  { key: 'exercise', label: 'Steps', icon: 'activity', unit: 'steps', targetValue: 8000 },
   { key: 'mood', label: 'Mood', icon: 'smile', unit: null, targetValue: null },
   { key: 'meditation', label: 'Meditation', icon: 'wind', unit: 'minutes', targetValue: 15 },
   { key: 'reading', label: 'Reading', icon: 'book', unit: 'pages', targetValue: 30 },

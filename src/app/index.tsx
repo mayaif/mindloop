@@ -8,7 +8,7 @@ import { StatTile } from '@/components/StatTile';
 import { HabitRow } from '@/components/HabitRow';
 import type { Habit, HabitLog } from '@/types/habit';
 
-// HealthKit only exists on iOS — everywhere else, Sleep/Exercise stay
+// HealthKit only exists on iOS — everywhere else, Sleep/Steps stay
 // manually-entered, so we surface a note pointing at the phone app instead
 // of silently doing nothing.
 const SHOW_HEALTH_FALLBACK_NOTE = Platform.OS !== 'ios';
@@ -99,7 +99,7 @@ export default function TodayScreen() {
           </Text>
           {SHOW_HEALTH_FALLBACK_NOTE && (
             <Text className="text-xs text-muted-foreground">
-              Sleep and Exercise sync automatically from Apple Health on iPhone — log them here manually for now.
+              Sleep and Steps sync automatically from Apple Health on iPhone — log them here manually for now.
             </Text>
           )}
           {habits.map((habit) => {

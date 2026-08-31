@@ -20,7 +20,7 @@ export async function isHealthKitSupported(): Promise<boolean> {
 }
 
 const READ_TYPES = [
-  'HKQuantityTypeIdentifierAppleExerciseTime',
+  'HKQuantityTypeIdentifierStepCount',
   'HKCategoryTypeIdentifierSleepAnalysis',
 ] as const;
 
@@ -40,7 +40,7 @@ export async function requestHealthAuthorization(): Promise<boolean> {
 }
 
 export type HealthSnapshot = {
-  exerciseMinutes: number | null;
+  steps: number | null;
   sleepHours: number | null;
 };
 
@@ -49,16 +49,16 @@ export type HealthSnapshot = {
 // the time someone was in bed but not necessarily sleeping.
 const ASLEEP_VALUES = new Set([1, 3, 4, 5]);
 
-async function readExerciseMinutes(
+async function readSteps(
   hk: typeof import('@kingstinct/react-native-healthkit'),
   startOfDay: Date,
   now: Date
 ): Promise<number | null> {
   try {
     const stats = await hk.queryStatisticsForQuantity(
-      'HKQuantityTypeIdentifierAppleExerciseTime',
+      'HKQuantityTypeIdentifierStepCount',
       ['cumulativeSum'],
-      { unit: 'min', filter: { date: { startDate: startOfDay, endDate: now } } }
+      { unit: 'count', filter: { date: { startDate: startOfDay, endDate: now } } }
     );
     return stats.sumQuantity ? Math.round(stats.sumQuantity.quantity) : 0;
   } catch {
@@ -88,23 +88,26 @@ async function readSleepHours(
   }
 }
 
-/** Reads today's Exercise minutes and last night's Sleep hours from
- * HealthKit. Either field comes back `null` (not 0) if the read itself
- * failed (e.g. permission never granted) — callers should treat `null` as
- * "no data available" and leave any existing manually-logged value alone,
- * distinct from a genuine `0` reading. */
+/** Reads today's step count and last night's Sleep hours from HealthKit.
+ * Steps (not Exercise Minutes) is the Steps habit's data source — it's
+ * populated automatically just from carrying an iPhone, whereas Exercise
+ * Minutes needs an Apple Watch workout or a manual Health entry and would
+ * realistically stay empty for most users. Either field comes back `null`
+ * (not 0) if the read itself failed (e.g. permission never granted) —
+ * callers should treat `null` as "no data available" and leave any existing
+ * manually-logged value alone, distinct from a genuine `0` reading. */
 export async function readTodayHealthSnapshot(): Promise<HealthSnapshot> {
   const hk = await loadHealthKit();
-  if (!hk) return { exerciseMinutes: null, sleepHours: null };
+  if (!hk) return { steps: null, sleepHours: null };
 
   const now = new Date();
   const startOfDay = new Date(now);
   startOfDay.setHours(0, 0, 0, 0);
 
-  const [exerciseMinutes, sleepHours] = await Promise.all([
-    readExerciseMinutes(hk, startOfDay, now),
+  const [steps, sleepHours] = await Promise.all([
+    readSteps(hk, startOfDay, now),
     readSleepHours(hk, now),
   ]);
 
-  return { exerciseMinutes, sleepHours };
+  return { steps, sleepHours };
 }

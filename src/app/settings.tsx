@@ -111,7 +111,7 @@ export default function SettingsScreen() {
             <View className="gap-3">
               <View className="flex-row items-center gap-2">
                 <Feather name="heart" size={16} color="#3F5C43" />
-                <Text className="text-sm text-foreground">Sleep and Exercise sync automatically from Health.</Text>
+                <Text className="text-sm text-foreground">Sleep and Steps sync automatically from Health.</Text>
               </View>
               <Pressable
                 onPress={() => void syncNow()}
@@ -130,7 +130,7 @@ export default function SettingsScreen() {
             <Text className="text-sm text-muted-foreground">
               {Platform.OS === 'ios'
                 ? 'Health data isn’t available on this device.'
-                : 'Use the app on your iPhone to sync Sleep and Exercise from Apple Health automatically.'}
+                : 'Use the app on your iPhone to sync Sleep and Steps from Apple Health automatically.'}
             </Text>
           )}
         </Card>

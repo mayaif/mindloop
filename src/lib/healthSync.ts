@@ -21,7 +21,7 @@ export async function isHealthSyncAvailable(): Promise<boolean> {
 
 /** Requests HealthKit read authorization once per install (the system sheet
  * only ever appears the first time; asking again is a harmless no-op but
- * skipping it avoids the extra round trip), then pulls today's Exercise and
+ * skipping it avoids the extra round trip), then pulls today's Steps and
  * Sleep data in and writes it to the local habit_logs rows those two habits
  * already use — reusing the exact same dirty-flag push-sync path a manual
  * tap would go through, so it reaches Supabase/other devices for free.
@@ -38,7 +38,7 @@ export async function syncHealthDataForToday(userId: string): Promise<void> {
 
   const snapshot = await readTodayHealthSnapshot();
   const readings: Partial<Record<HabitKey, number | null>> = {
-    exercise: snapshot.exerciseMinutes,
+    exercise: snapshot.steps,
     sleep: snapshot.sleepHours,
   };
 

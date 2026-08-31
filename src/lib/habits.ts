@@ -16,7 +16,10 @@ export function todayIsoDate(): string {
  * up to Supabase too. */
 export async function ensureDefaultHabits(userId: string): Promise<Habit[]> {
   const existing = await getHabitsLocal();
-  if (existing.length > 0) return existing;
+  if (existing.length > 0) {
+    await migrateExerciseHabitToSteps(existing);
+    return existing;
+  }
 
   const created: Habit[] = [];
   for (const def of DEFAULT_HABITS) {
@@ -36,6 +39,23 @@ export async function ensureDefaultHabits(userId: string): Promise<Habit[]> {
     created.push(habit);
   }
   return created;
+}
+
+/** One-time fixup for installs seeded before the Exercise habit was
+ * redefined from "Exercise Minutes" (needs an Apple Watch workout or a
+ * manual Health entry) to "Steps" (populated automatically just by
+ * carrying an iPhone). Only touches a row that still has the old
+ * minutes/30 shape, so it's a no-op everywhere else. */
+async function migrateExerciseHabitToSteps(existing: Habit[]): Promise<void> {
+  const stepsDef = DEFAULT_HABITS.find((d) => d.key === 'exercise');
+  if (!stepsDef) return;
+  const stale = existing.find((h) => h.key === 'exercise' && h.unit !== stepsDef.unit);
+  if (!stale) return;
+
+  await upsertHabitLocal(
+    { ...stale, label: stepsDef.label, unit: stepsDef.unit, targetValue: stepsDef.targetValue, updatedAt: nowIso() },
+    true
+  );
 }
 
 /** Adds `delta` to today's logged value for a habit (creating today's row if
