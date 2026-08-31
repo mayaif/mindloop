@@ -5,6 +5,7 @@ import { useAppSyncContext } from '@/lib/AppSyncContext';
 import { getHabitsLocal, getRecentLogsLocal } from '@/lib/localDb';
 import { Card } from '@/components/Card';
 import { WeeklyBarChart } from '@/components/WeeklyBarChart';
+import { chartColorFor } from '@/theme/colors';
 import type { Habit, HabitLog } from '@/types/habit';
 
 const MOOD_EMOJI = ['😞', '🙁', '😐', '🙂', '😄'];
@@ -84,7 +85,7 @@ export default function TrendsScreen() {
           return (
             <Card key={habit.id}>
               <Text className="mb-3 font-semibold text-foreground">{habit.label}</Text>
-              <WeeklyBarChart days={dayValues} target={habit.targetValue} />
+              <WeeklyBarChart days={dayValues} target={habit.targetValue} color={chartColorFor(habit.key)} />
             </Card>
           );
         })}

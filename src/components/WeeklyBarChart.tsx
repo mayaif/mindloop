@@ -6,7 +6,19 @@ type DayValue = { date: string; value: number };
  * — one less native dependency, and this doesn't need anything an SVG
  * would give beyond a bar's height, same reasoning as RuleForge's dashboard
  * trend chart. */
-export function WeeklyBarChart({ days, target }: { days: DayValue[]; target: number | null }) {
+export function WeeklyBarChart({
+  days,
+  target,
+  color,
+}: {
+  days: DayValue[];
+  target: number | null;
+  /** Per-habit hue (see theme/colors.ts chartColorFor) — a day that hit its
+   * target renders at full color, one that didn't renders the same hue at
+   * low opacity, so each habit's chart keeps its own identity instead of
+   * every chart sharing one met/not-met color pair. */
+  color: string;
+}) {
   const max = Math.max(target ?? 0, ...days.map((d) => d.value), 1);
 
   return (
@@ -19,8 +31,8 @@ export function WeeklyBarChart({ days, target }: { days: DayValue[]; target: num
             <View key={d.date} className="flex-1 items-center justify-end" style={{ height: '100%' }}>
               <View
                 accessibilityLabel={`${d.date}: ${d.value}`}
-                className={`w-full rounded-t-sm ${met ? 'bg-primary' : 'bg-muted-foreground/30'}`}
-                style={{ height: `${pct}%` }}
+                className="w-full rounded-t-sm"
+                style={{ height: `${pct}%`, backgroundColor: color, opacity: met ? 1 : 0.3 }}
               />
             </View>
           );

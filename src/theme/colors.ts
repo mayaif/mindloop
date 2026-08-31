@@ -15,3 +15,21 @@ export const colors = {
   muted: '#F1EEE3',
   mutedForeground: '#6F7669',
 } as const;
+
+/** One distinct hue per habit for the Trends bar charts — chosen to feel
+ * loosely tied to what each habit is (blue for water, violet for
+ * night/sleep, amber for a book, teal for calm/meditation) while staying in
+ * the same tasteful, muted-but-vivid register as primary/accent rather than
+ * clashing with them. Falls back to primary for any habit key not listed
+ * here (e.g. a future custom habit). */
+export const chartColors: Record<string, string> = {
+  water: '#3B82F6',
+  sleep: '#8B5CF6',
+  exercise: '#0EA672',
+  meditation: '#14B8A6',
+  reading: '#F59E0B',
+};
+
+export function chartColorFor(habitKey: string): string {
+  return chartColors[habitKey] ?? colors.primary;
+}
