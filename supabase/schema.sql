@@ -27,10 +27,18 @@ create table if not exists habit_logs (
   value numeric,
   mood_score smallint,
   note text,
+  -- 'manual' (typed in) or 'healthkit' (written by the Apple Health sync) —
+  -- the app treats healthkit rows as read-only so a stale manual edit can't
+  -- race a background re-sync.
+  source text not null default 'manual',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (habit_id, log_date)
 );
+
+-- Safe to re-run: adds `source` to a habit_logs table that was created
+-- before this column existed (a project that ran this file previously).
+alter table habit_logs add column if not exists source text not null default 'manual';
 
 create index if not exists habit_logs_user_date_idx on habit_logs (user_id, log_date);
 

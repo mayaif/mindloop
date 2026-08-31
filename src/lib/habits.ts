@@ -47,7 +47,7 @@ export async function adjustTodayProgress(userId: string, habit: Habit, delta: n
   const existing = logs.find((l) => l.habitId === habit.id);
 
   const log: HabitLog = existing
-    ? { ...existing, value: Math.max(0, (existing.value ?? 0) + delta), updatedAt: nowIso() }
+    ? { ...existing, value: Math.max(0, (existing.value ?? 0) + delta), source: 'manual', updatedAt: nowIso() }
     : {
         id: Crypto.randomUUID(),
         userId,
@@ -56,6 +56,7 @@ export async function adjustTodayProgress(userId: string, habit: Habit, delta: n
         value: Math.max(0, delta),
         moodScore: null,
         note: null,
+        source: 'manual',
         createdAt: nowIso(),
         updatedAt: nowIso(),
       };
@@ -72,7 +73,7 @@ export async function setTodayMood(userId: string, habit: Habit, moodScore: numb
   const existing = logs.find((l) => l.habitId === habit.id);
 
   const log: HabitLog = existing
-    ? { ...existing, moodScore, updatedAt: nowIso() }
+    ? { ...existing, moodScore, source: 'manual', updatedAt: nowIso() }
     : {
         id: Crypto.randomUUID(),
         userId,
@@ -81,6 +82,7 @@ export async function setTodayMood(userId: string, habit: Habit, moodScore: numb
         value: null,
         moodScore,
         note: null,
+        source: 'manual',
         createdAt: nowIso(),
         updatedAt: nowIso(),
       };

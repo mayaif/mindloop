@@ -4,6 +4,7 @@ import { getCurrentUser, supabase } from './supabase';
 import { ensureDefaultHabits } from './habits';
 import { runSync } from './sync';
 import { subscribeToRealtimeSync, type RealtimeSyncHandle } from './realtime';
+import { syncHealthDataForToday } from './healthSync';
 
 export type AppSyncState = {
   userId: string | null;
@@ -23,6 +24,9 @@ export type AppSyncState = {
   /** Bump this after a local write so screens can force an immediate re-read
    * of local data without waiting on the sync/realtime cadence. */
   refreshToken: number;
+  /** Manually triggers a HealthKit read + push/pull sync (the Settings
+   * "Sync now" button) instead of waiting for the reconnect-triggered one. */
+  syncNow: () => Promise<void>;
 };
 
 /** Checks for an existing session on launch (never signs anyone in
@@ -114,6 +118,9 @@ export function useAppSync(): AppSyncState {
   async function trySync(id: string) {
     setSyncing(true);
     try {
+      // Best-effort: a HealthKit read failing (denied permission, no data,
+      // non-iOS) shouldn't block the regular Supabase push/pull sync below.
+      await syncHealthDataForToday(id).catch(() => {});
       await runSync(id);
       setLastError(null);
       setLastSyncedAt(new Date());
@@ -130,6 +137,10 @@ export function useAppSync(): AppSyncState {
     if (user) await proceedWithUser(user.id);
   }, [proceedWithUser]);
 
+  const syncNow = useCallback(async () => {
+    if (userIdRef.current) await trySync(userIdRef.current);
+  }, []);
+
   return {
     userId,
     needsAuth,
@@ -140,5 +151,6 @@ export function useAppSync(): AppSyncState {
     lastError,
     onSignedIn,
     refreshToken,
+    syncNow,
   };
 }

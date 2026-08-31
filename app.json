@@ -8,7 +8,9 @@
     "scheme": "mindloop",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.mayaif.mindloop",
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -33,7 +35,14 @@
           "imageWidth": 76
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "MindLoop reads your sleep and exercise data from Health so your habit tracker stays up to date automatically.",
+          "NSHealthUpdateUsageDescription": "MindLoop does not write any data back to Health."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

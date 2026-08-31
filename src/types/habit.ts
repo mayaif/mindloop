@@ -13,6 +13,12 @@ export type Habit = {
   updatedAt: string;
 };
 
+/** Where a log's value came from — 'healthkit' rows are written by the
+ * Apple Health sync (see lib/health.ts) rather than a manual +/- tap, and
+ * the UI treats them as read-only so a background re-sync can't be
+ * silently clobbered by a stale manual edit. */
+export type HabitLogSource = 'manual' | 'healthkit';
+
 export type HabitLog = {
   id: string;
   userId: string | null;
@@ -21,6 +27,7 @@ export type HabitLog = {
   value: number | null;
   moodScore: number | null;
   note: string | null;
+  source: HabitLogSource;
   createdAt: string;
   updatedAt: string;
 };

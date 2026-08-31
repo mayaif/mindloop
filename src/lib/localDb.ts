@@ -42,6 +42,15 @@ function getDb(): Promise<SQLiteDatabase> {
           value TEXT
         );
       `);
+      // CREATE TABLE IF NOT EXISTS never adds columns to a table that already
+      // existed before this field was introduced — a real device that
+      // installed the app pre-HealthKit needs this added by hand, guarded
+      // since re-running ALTER TABLE ADD COLUMN on a column that already
+      // exists throws.
+      const columns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(habit_logs)');
+      if (!columns.some((c) => c.name === 'source')) {
+        await db.execAsync("ALTER TABLE habit_logs ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'");
+      }
       return db;
     });
   }
@@ -71,6 +80,7 @@ type HabitLogRow = {
   value: number | null;
   mood_score: number | null;
   note: string | null;
+  source: string;
   created_at: string;
   updated_at: string;
 };
@@ -99,6 +109,7 @@ function logFromRow(r: HabitLogRow): HabitLog {
     value: r.value,
     moodScore: r.mood_score,
     note: r.note,
+    source: r.source === 'healthkit' ? 'healthkit' : 'manual',
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -166,10 +177,10 @@ export async function getRecentLogsLocal(sinceDate: string): Promise<HabitLog[]>
 export async function upsertHabitLogLocal(log: HabitLog, dirty = true): Promise<void> {
   const db = await getDb();
   await db.runAsync(
-    `INSERT INTO habit_logs (id, user_id, habit_id, log_date, value, mood_score, note, created_at, updated_at, dirty)
-     VALUES ($id, $userId, $habitId, $logDate, $value, $moodScore, $note, $createdAt, $updatedAt, $dirty)
+    `INSERT INTO habit_logs (id, user_id, habit_id, log_date, value, mood_score, note, source, created_at, updated_at, dirty)
+     VALUES ($id, $userId, $habitId, $logDate, $value, $moodScore, $note, $source, $createdAt, $updatedAt, $dirty)
      ON CONFLICT(habit_id, log_date) DO UPDATE SET
-       value=excluded.value, mood_score=excluded.mood_score, note=excluded.note,
+       value=excluded.value, mood_score=excluded.mood_score, note=excluded.note, source=excluded.source,
        updated_at=excluded.updated_at, dirty=excluded.dirty
      WHERE excluded.updated_at >= habit_logs.updated_at`,
     {
@@ -180,6 +191,7 @@ export async function upsertHabitLogLocal(log: HabitLog, dirty = true): Promise<
       $value: log.value,
       $moodScore: log.moodScore,
       $note: log.note,
+      $source: log.source,
       $createdAt: log.createdAt,
       $updatedAt: log.updatedAt,
       $dirty: dirty ? 1 : 0,

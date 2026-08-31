@@ -24,6 +24,7 @@ type HabitLogRow = {
   value: number | null;
   mood_score: number | null;
   note: string | null;
+  source: string;
   created_at: string;
   updated_at: string;
 };
@@ -52,6 +53,7 @@ function fromHabitLogRow(r: HabitLogRow): HabitLog {
     value: r.value,
     moodScore: r.mood_score,
     note: r.note,
+    source: r.source === 'healthkit' ? 'healthkit' : 'manual',
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };

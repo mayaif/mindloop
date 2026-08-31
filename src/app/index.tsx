@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppSyncContext } from '@/lib/AppSyncContext';
 import { getHabitsLocal, getLogsForDateLocal } from '@/lib/localDb';
@@ -7,6 +7,11 @@ import { adjustTodayProgress, setTodayMood, todayIsoDate } from '@/lib/habits';
 import { StatTile } from '@/components/StatTile';
 import { HabitRow } from '@/components/HabitRow';
 import type { Habit, HabitLog } from '@/types/habit';
+
+// HealthKit only exists on iOS — everywhere else, Sleep/Exercise stay
+// manually-entered, so we surface a note pointing at the phone app instead
+// of silently doing nothing.
+const SHOW_HEALTH_FALLBACK_NOTE = Platform.OS !== 'ios';
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -92,6 +97,11 @@ export default function TodayScreen() {
           <Text className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Today&apos;s habits
           </Text>
+          {SHOW_HEALTH_FALLBACK_NOTE && (
+            <Text className="text-xs text-muted-foreground">
+              Sleep and Exercise sync automatically from Apple Health on iPhone — log them here manually for now.
+            </Text>
+          )}
           {habits.map((habit) => {
             const log = logFor(habit.id);
             return (
@@ -100,6 +110,7 @@ export default function TodayScreen() {
                 habit={habit}
                 value={log?.value ?? null}
                 moodScore={log?.moodScore ?? null}
+                source={log?.source}
                 onAdjust={(delta) => handleAdjust(habit, delta)}
                 onSetMood={(score) => handleMood(habit, score)}
               />

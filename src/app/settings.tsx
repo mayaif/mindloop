@@ -1,22 +1,26 @@
 import { useEffect, useState } from 'react';
-import { View, Text, TextInput, Pressable, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, TextInput, Pressable, ActivityIndicator, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import { getCurrentUser, upgradeGuestToEmailAccount, signOut, type AuthUser } from '@/lib/supabase';
 import { Card } from '@/components/Card';
 import { SyncStatus } from '@/components/AppChrome';
 import { useAppSyncContext } from '@/lib/AppSyncContext';
+import { isHealthSyncAvailable } from '@/lib/healthSync';
 
 export default function SettingsScreen() {
-  const { lastSyncedAt } = useAppSyncContext();
+  const { lastSyncedAt, syncing, syncNow } = useAppSyncContext();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [upgraded, setUpgraded] = useState(false);
+  const [healthAvailable, setHealthAvailable] = useState(false);
 
   useEffect(() => {
     void getCurrentUser().then(setUser);
+    void isHealthSyncAvailable().then(setHealthAvailable);
   }, []);
 
   async function handleUpgrade() {
@@ -100,6 +104,36 @@ export default function SettingsScreen() {
             Account created — check your email to confirm, then you can log in from any device.
           </Text>
         )}
+
+        <Card>
+          <Text className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Apple Health</Text>
+          {healthAvailable ? (
+            <View className="gap-3">
+              <View className="flex-row items-center gap-2">
+                <Feather name="heart" size={16} color="#3F5C43" />
+                <Text className="text-sm text-foreground">Sleep and Exercise sync automatically from Health.</Text>
+              </View>
+              <Pressable
+                onPress={() => void syncNow()}
+                disabled={syncing}
+                accessibilityRole="button"
+                className="items-center rounded-xl border border-border py-2.5"
+              >
+                {syncing ? (
+                  <ActivityIndicator />
+                ) : (
+                  <Text className="font-medium text-foreground">Sync now</Text>
+                )}
+              </Pressable>
+            </View>
+          ) : (
+            <Text className="text-sm text-muted-foreground">
+              {Platform.OS === 'ios'
+                ? 'Health data isn’t available on this device.'
+                : 'Use the app on your iPhone to sync Sleep and Exercise from Apple Health automatically.'}
+            </Text>
+          )}
+        </Card>
 
         <Card>
           <Text className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Sync</Text>
