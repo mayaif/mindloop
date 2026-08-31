@@ -1,6 +1,7 @@
 import { View, Text, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { habitIconName } from './habitIcon';
+import { colors } from '@/theme/colors';
 import type { Habit, HabitLogSource } from '@/types/habit';
 
 const MOOD_EMOJI = ['😞', '🙁', '😐', '🙂', '😄'];
@@ -30,8 +31,8 @@ export function HabitRow({
 
   return (
     <View className="flex-row items-center gap-3 rounded-2xl border border-border bg-card p-4">
-      <View className="h-11 w-11 items-center justify-center rounded-full border border-border">
-        <Feather name={habitIconName(habit.icon)} size={20} color="#3F5C43" />
+      <View className="h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+        <Feather name={habitIconName(habit.icon)} size={20} color={colors.primary} />
       </View>
 
       <View className="flex-1">
@@ -53,7 +54,7 @@ export function HabitRow({
           className="flex-row items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1.5"
           accessibilityLabel={`${habit.label} synced automatically from Apple Health`}
         >
-          <Feather name="heart" size={12} color="#3F5C43" />
+          <Feather name="heart" size={12} color={colors.primary} />
           <Text className="text-xs font-medium text-primary">Synced</Text>
         </View>
       ) : isMood ? (
@@ -68,7 +69,7 @@ export function HabitRow({
                 accessibilityRole="radio"
                 accessibilityState={{ selected }}
                 accessibilityLabel={`Mood ${score} of 5`}
-                className={`h-9 w-9 items-center justify-center rounded-full ${selected ? 'bg-primary/20' : ''}`}
+                className={`h-9 w-9 items-center justify-center rounded-full ${selected ? 'bg-accent/20' : ''}`}
               >
                 <Text className="text-base">{emoji}</Text>
               </Pressable>
@@ -83,7 +84,7 @@ export function HabitRow({
             accessibilityLabel={`Decrease ${habit.label}`}
             className="h-9 w-9 items-center justify-center rounded-full border border-border"
           >
-            <Feather name="minus" size={16} color="#3F5C43" />
+            <Feather name="minus" size={16} color={colors.primary} />
           </Pressable>
           <Pressable
             onPress={() => onAdjust(1)}
@@ -91,7 +92,7 @@ export function HabitRow({
             accessibilityLabel={`Increase ${habit.label}`}
             className="h-9 w-9 items-center justify-center rounded-full bg-primary"
           >
-            <Feather name="plus" size={16} color="#fff" />
+            <Feather name="plus" size={16} color={colors.primaryForeground} />
           </Pressable>
         </View>
       )}

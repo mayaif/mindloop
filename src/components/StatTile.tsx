@@ -1,6 +1,7 @@
 import { View, Text, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { habitIconName } from './habitIcon';
+import { colors } from '@/theme/colors';
 
 export function StatTile({
   icon,
@@ -24,8 +25,8 @@ export function StatTile({
         active ? 'bg-primary/10' : 'bg-card'
       }`}
     >
-      <View className="h-11 w-11 items-center justify-center rounded-full border border-border">
-        <Feather name={habitIconName(icon)} size={20} color="#3F5C43" />
+      <View className="h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+        <Feather name={habitIconName(icon)} size={20} color={colors.primary} />
       </View>
       <Text className="font-medium text-foreground">{label}</Text>
       <Text className="text-sm text-muted-foreground">{valueLabel}</Text>

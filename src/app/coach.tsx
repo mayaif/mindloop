@@ -6,6 +6,7 @@ import { getWeeklyCoaching, getSavedInsight, setCommittedGoals, type MicroGoal }
 import { Card } from '@/components/Card';
 import { habitIconName } from '@/components/habitIcon';
 import { useAppSyncContext } from '@/lib/AppSyncContext';
+import { colors } from '@/theme/colors';
 
 export default function CoachScreen() {
   const { userId } = useAppSyncContext();
@@ -101,7 +102,9 @@ export default function CoachScreen() {
         {review && (
           <Card>
             <View className="mb-2 flex-row items-center gap-2">
-              <Feather name="cloud" size={16} color="#3F5C43" />
+              <View className="h-7 w-7 items-center justify-center rounded-full bg-accent/15">
+                <Feather name="cloud" size={14} color={colors.accent} />
+              </View>
               <Text className="font-semibold text-foreground">Review</Text>
             </View>
             <Text className="leading-relaxed text-foreground">{review}</Text>
@@ -118,7 +121,7 @@ export default function CoachScreen() {
               return (
                 <Card key={goal.title}>
                   <View className="mb-1 flex-row items-center gap-2">
-                    <Feather name={habitIconName(goal.habitKey === 'mood' ? 'smile' : goal.habitKey)} size={14} color="#6B7268" />
+                    <Feather name={habitIconName(goal.habitKey === 'mood' ? 'smile' : goal.habitKey)} size={14} color={colors.mutedForeground} />
                     <Text className="text-xs uppercase tracking-wide text-muted-foreground">{goal.habitKey}</Text>
                   </View>
                   <Text className="mb-1 text-lg font-semibold text-foreground">{goal.title}</Text>

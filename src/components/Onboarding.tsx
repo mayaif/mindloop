@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { signInAsGuest, signUpWithEmail, signInWithEmail } from '@/lib/supabase';
+import { colors } from '@/theme/colors';
 
 type Mode = 'choice' | 'signup' | 'login';
 
@@ -44,7 +45,7 @@ export function Onboarding({ onSignedIn }: { onSignedIn: () => Promise<void> }) 
               onPress={() => run(signInAsGuest)}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.primaryForeground} />
               ) : (
                 <Text className="font-medium text-primary-foreground">Continue as guest</Text>
               )}
@@ -109,7 +110,7 @@ export function Onboarding({ onSignedIn }: { onSignedIn: () => Promise<void> }) 
               }
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.primaryForeground} />
               ) : (
                 <Text className="font-medium text-primary-foreground">
                   {mode === 'signup' ? 'Create account' : 'Log in'}

@@ -7,6 +7,7 @@ import { Card } from '@/components/Card';
 import { SyncStatus } from '@/components/AppChrome';
 import { useAppSyncContext } from '@/lib/AppSyncContext';
 import { isHealthSyncAvailable } from '@/lib/healthSync';
+import { colors } from '@/theme/colors';
 
 export default function SettingsScreen() {
   const { lastSyncedAt, syncing, syncNow } = useAppSyncContext();
@@ -93,7 +94,7 @@ export default function SettingsScreen() {
                 accessibilityRole="button"
                 className="items-center rounded-xl bg-primary py-3"
               >
-                {loading ? <ActivityIndicator color="#fff" /> : <Text className="font-medium text-primary-foreground">Save</Text>}
+                {loading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text className="font-medium text-primary-foreground">Save</Text>}
               </Pressable>
             </View>
           </Card>
@@ -110,7 +111,7 @@ export default function SettingsScreen() {
           {healthAvailable ? (
             <View className="gap-3">
               <View className="flex-row items-center gap-2">
-                <Feather name="heart" size={16} color="#3F5C43" />
+                <Feather name="heart" size={16} color={colors.primary} />
                 <Text className="text-sm text-foreground">Sleep and Steps sync automatically from Health.</Text>
               </View>
               <Pressable

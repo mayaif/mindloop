@@ -13,20 +13,26 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Sage green + cream palette, approximated by eye from the Stitch
-        // design PNGs (not pixel-sampled) — refine against the reference
-        // images when building the actual screens.
-        background: '#F5F4F0',
-        foreground: '#1F2A22',
+        // Modern-vibrant refresh of the original sage/cream Stitch reference
+        // — a punchier emerald primary plus a warm coral accent for
+        // highlights, kept in sync with src/theme/colors.ts (which Feather
+        // icons read from directly, since className can't reach their
+        // `color` prop).
+        background: '#FAF8F3',
+        foreground: '#1C2620',
         card: '#FFFFFF',
-        border: '#E4E2DA',
+        border: '#E9E4D8',
         primary: {
-          DEFAULT: '#3F5C43',
+          DEFAULT: '#0EA672',
+          foreground: '#FFFFFF',
+        },
+        accent: {
+          DEFAULT: '#FF6B4A',
           foreground: '#FFFFFF',
         },
         muted: {
-          DEFAULT: '#EFEDE6',
-          foreground: '#6B7268',
+          DEFAULT: '#F1EEE3',
+          foreground: '#6F7669',
         },
       },
     },

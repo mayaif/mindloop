@@ -3,6 +3,7 @@ import { Link, usePathname } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppSyncContext } from '@/lib/AppSyncContext';
+import { colors } from '@/theme/colors';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Today', icon: 'home' as const },
@@ -31,7 +32,7 @@ function SyncStatus({ compact = false }: { compact?: boolean }) {
 }
 
 function NavIcon({ name, active }: { name: keyof typeof Feather.glyphMap; active: boolean }) {
-  return <Feather name={name} size={22} color={active ? '#3F5C43' : '#6B7268'} />;
+  return <Feather name={name} size={22} color={active ? colors.primary : colors.mutedForeground} />;
 }
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
