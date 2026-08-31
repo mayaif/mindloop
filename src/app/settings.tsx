@@ -92,7 +92,7 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-background">
       <ScrollView contentContainerClassName="gap-6 p-6" accessibilityLabel="Settings">
-        <Text className="text-2xl font-semibold text-foreground">Settings</Text>
+        <Text accessibilityRole="header" className="text-2xl font-semibold text-foreground">Settings</Text>
 
         <Card>
           <Text className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Account</Text>
@@ -162,7 +162,12 @@ export default function SettingsScreen() {
           {healthAvailable ? (
             <View className="gap-3">
               <View className="flex-row items-center gap-2">
-                <Feather name="heart" size={16} color={colors.primary} />
+                <Feather
+                  name="heart"
+                  size={16}
+                  color={colors.primary}
+                  aria-hidden={true}
+                />
                 <Text className="text-sm text-foreground">Sleep and Steps sync automatically from Health.</Text>
               </View>
               <Pressable

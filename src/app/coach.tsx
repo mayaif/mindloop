@@ -64,7 +64,7 @@ export default function CoachScreen() {
     <SafeAreaView edges={['top']} className="flex-1 bg-background">
       <ScrollView contentContainerClassName="gap-6 p-6" accessibilityLabel="Coach">
         <View className="gap-1">
-          <Text className="text-2xl font-semibold text-foreground">Your Weekly Insight</Text>
+          <Text accessibilityRole="header" className="text-2xl font-semibold text-foreground">Your Weekly Insight</Text>
           <Text className="text-muted-foreground">
             Let&apos;s review the past few days and set a gentle course for the week ahead.
           </Text>
@@ -103,7 +103,12 @@ export default function CoachScreen() {
           <Card>
             <View className="mb-2 flex-row items-center gap-2">
               <View className="h-7 w-7 items-center justify-center rounded-full bg-accent/15">
-                <Feather name="cloud" size={14} color={colors.accent} />
+                <Feather
+                  name="cloud"
+                  size={14}
+                  color={colors.accent}
+                  aria-hidden={true}
+                />
               </View>
               <Text className="font-semibold text-foreground">Review</Text>
             </View>
@@ -121,7 +126,12 @@ export default function CoachScreen() {
               return (
                 <Card key={goal.title}>
                   <View className="mb-1 flex-row items-center gap-2">
-                    <Feather name={habitIconName(goal.habitKey === 'mood' ? 'smile' : goal.habitKey)} size={14} color={colors.mutedForeground} />
+                    <Feather
+                      name={habitIconName(goal.habitKey === 'mood' ? 'smile' : goal.habitKey)}
+                      size={14}
+                      color={colors.mutedForeground}
+                      aria-hidden={true}
+                    />
                     <Text className="text-xs uppercase tracking-wide text-muted-foreground">{goal.habitKey}</Text>
                   </View>
                   <Text className="mb-1 text-lg font-semibold text-foreground">{goal.title}</Text>

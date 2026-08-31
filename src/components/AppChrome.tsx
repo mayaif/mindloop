@@ -32,7 +32,17 @@ function SyncStatus({ compact = false }: { compact?: boolean }) {
 }
 
 function NavIcon({ name, active }: { name: keyof typeof Feather.glyphMap; active: boolean }) {
-  return <Feather name={name} size={22} color={active ? colors.primary : colors.mutedForeground} />;
+  // Decorative — the Link/Pressable it sits inside already has a visible
+  // text label, so without this a screen reader would announce the icon's
+  // raw font glyph as a stray, meaningless character alongside it.
+  return (
+    <Feather
+      name={name}
+      size={22}
+      color={active ? colors.primary : colors.mutedForeground}
+      aria-hidden={true}
+    />
+  );
 }
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
@@ -52,6 +62,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
                 <Link key={item.href} href={item.href} asChild>
                   <Pressable
                     accessibilityRole="link"
+                    accessibilityState={{ selected: active }}
                     className={`flex-row items-center gap-3 rounded-lg px-3 py-2.5 ${active ? 'bg-primary/10' : ''}`}
                   >
                     <NavIcon name={item.icon} active={active} />
@@ -79,7 +90,11 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
             const active = pathname === item.href;
             return (
               <Link key={item.href} href={item.href} asChild>
-                <Pressable accessibilityRole="link" className="items-center gap-1 px-3 py-1.5">
+                <Pressable
+                  accessibilityRole="link"
+                  accessibilityState={{ selected: active }}
+                  className="items-center gap-1 px-3 py-1.5"
+                >
                   <NavIcon name={item.icon} active={active} />
                   <Text className={`text-xs ${active ? 'font-medium text-primary' : 'text-muted-foreground'}`}>
                     {item.label}

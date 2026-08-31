@@ -29,7 +29,7 @@ export function Onboarding({ onSignedIn }: { onSignedIn: () => Promise<void> }) 
     <View className="flex-1 items-center justify-center bg-background px-6">
       <View className="w-full max-w-sm gap-6">
         <View className="items-center gap-2">
-          <Text className="text-3xl font-semibold text-foreground">MindLoop</Text>
+          <Text accessibilityRole="header" className="text-3xl font-semibold text-foreground">MindLoop</Text>
           <Text className="text-center text-base text-muted-foreground">
             A gentle habit tracker with an AI coach that reviews your week and suggests small,
             achievable goals.

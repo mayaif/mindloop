@@ -22,8 +22,11 @@ module.exports = {
         foreground: '#1C2620',
         card: '#FFFFFF',
         border: '#E9E4D8',
+        // primary and muted.foreground are deliberately darker than a first
+        // pass — see the WCAG contrast comments in src/theme/colors.ts,
+        // which these must stay in sync with.
         primary: {
-          DEFAULT: '#0EA672',
+          DEFAULT: '#0A7A52',
           foreground: '#FFFFFF',
         },
         accent: {
@@ -32,7 +35,7 @@ module.exports = {
         },
         muted: {
           DEFAULT: '#F1EEE3',
-          foreground: '#6F7669',
+          foreground: '#5B6255',
         },
       },
     },

@@ -67,7 +67,7 @@ export default function TodayScreen() {
     <SafeAreaView edges={['top']} className="flex-1 bg-background">
       <ScrollView contentContainerClassName="gap-6 p-6" accessibilityLabel="Today">
         <View className="gap-1">
-          <Text className="text-3xl font-semibold text-foreground">{greeting()}</Text>
+          <Text accessibilityRole="header" className="text-3xl font-semibold text-foreground">{greeting()}</Text>
           <Text className="text-base text-muted-foreground">Ready to center yourself today?</Text>
         </View>
 

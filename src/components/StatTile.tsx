@@ -26,7 +26,12 @@ export function StatTile({
       }`}
     >
       <View className="h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-        <Feather name={habitIconName(icon)} size={20} color={colors.primary} />
+        <Feather
+          name={habitIconName(icon)}
+          size={20}
+          color={colors.primary}
+          aria-hidden={true}
+        />
       </View>
       <Text className="font-medium text-foreground">{label}</Text>
       <Text className="text-sm text-muted-foreground">{valueLabel}</Text>

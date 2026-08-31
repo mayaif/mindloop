@@ -32,7 +32,12 @@ export function HabitRow({
   return (
     <View className="flex-row items-center gap-3 rounded-2xl border border-border bg-card p-4">
       <View className="h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-        <Feather name={habitIconName(habit.icon)} size={20} color={colors.primary} />
+        <Feather
+          name={habitIconName(habit.icon)}
+          size={20}
+          color={colors.primary}
+          aria-hidden={true}
+        />
       </View>
 
       <View className="flex-1">
@@ -54,7 +59,12 @@ export function HabitRow({
           className="flex-row items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1.5"
           accessibilityLabel={`${habit.label} synced automatically from Apple Health`}
         >
-          <Feather name="heart" size={12} color={colors.primary} />
+          <Feather
+            name="heart"
+            size={12}
+            color={colors.primary}
+            aria-hidden={true}
+          />
           <Text className="text-xs font-medium text-primary">Synced</Text>
         </View>
       ) : isMood ? (
@@ -84,7 +94,12 @@ export function HabitRow({
             accessibilityLabel={`Decrease ${habit.label}`}
             className="h-9 w-9 items-center justify-center rounded-full border border-border"
           >
-            <Feather name="minus" size={16} color={colors.primary} />
+            <Feather
+              name="minus"
+              size={16}
+              color={colors.primary}
+              aria-hidden={true}
+            />
           </Pressable>
           <Pressable
             onPress={() => onAdjust(1)}
@@ -92,7 +107,12 @@ export function HabitRow({
             accessibilityLabel={`Increase ${habit.label}`}
             className="h-9 w-9 items-center justify-center rounded-full bg-primary"
           >
-            <Feather name="plus" size={16} color={colors.primaryForeground} />
+            <Feather
+              name="plus"
+              size={16}
+              color={colors.primaryForeground}
+              aria-hidden={true}
+            />
           </Pressable>
         </View>
       )}

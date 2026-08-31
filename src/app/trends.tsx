@@ -49,7 +49,7 @@ export default function TrendsScreen() {
     <SafeAreaView edges={['top']} className="flex-1 bg-background">
       <ScrollView contentContainerClassName="gap-4 p-6" accessibilityLabel="Trends">
         <View className="gap-1">
-          <Text className="text-2xl font-semibold text-foreground">Week at a Glance</Text>
+          <Text accessibilityRole="header" className="text-2xl font-semibold text-foreground">Week at a Glance</Text>
           <Text className="text-muted-foreground">Here is your progress over the last 7 days.</Text>
         </View>
 
@@ -63,10 +63,22 @@ export default function TrendsScreen() {
                 <View className="flex-row justify-between">
                   {days.map((date) => {
                     const entry = habitLogs.find((l) => l.logDate === date);
+                    const weekdayFull = new Date(date).toLocaleDateString(undefined, { weekday: 'long' });
                     return (
-                      <View key={date} className="items-center gap-1">
-                        <Text className="text-lg">{entry?.moodScore ? MOOD_EMOJI[entry.moodScore - 1] : '·'}</Text>
-                        <Text className="text-[10px] text-muted-foreground">
+                      <View
+                        key={date}
+                        className="items-center gap-1"
+                        accessibilityLabel={
+                          entry?.moodScore ? `${weekdayFull}: mood ${entry.moodScore} of 5` : `${weekdayFull}: no mood logged`
+                        }
+                      >
+                        <Text className="text-lg" aria-hidden={true}>
+                          {entry?.moodScore ? MOOD_EMOJI[entry.moodScore - 1] : '·'}
+                        </Text>
+                        <Text
+                          className="text-[10px] text-muted-foreground"
+                          aria-hidden={true}
+                        >
                           {new Date(date).toLocaleDateString(undefined, { weekday: 'narrow' })}
                         </Text>
                       </View>
@@ -85,7 +97,7 @@ export default function TrendsScreen() {
           return (
             <Card key={habit.id}>
               <Text className="mb-3 font-semibold text-foreground">{habit.label}</Text>
-              <WeeklyBarChart days={dayValues} target={habit.targetValue} color={chartColorFor(habit.key)} />
+              <WeeklyBarChart days={dayValues} target={habit.targetValue} color={chartColorFor(habit.key)} unit={habit.unit} />
             </Card>
           );
         })}
